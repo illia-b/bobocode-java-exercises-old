@@ -8,22 +8,22 @@
     <artifactId>java-core-exercises</artifactId>
     <version>1.0-SNAPSHOT</version>
     <modules>
-        <module>linked-queue</module>
-        <module>linked-list</module>
-        <module>file-stats</module>
-        <module>file-reader</module>
-        <module>lambda-math-functions</module>
+        <!-- <module>linked-queue</module> -->
+        <!-- <module>linked-list</module> -->
+        <!-- <module>file-stats</module> -->
+        <!-- <module>file-reader</module> -->
+        <!-- <module>lambda-math-functions</module> -->
         <module>crazy-streams</module>
         <module>account-data</module>
-        <module>declarative-sum-of-squares</module>
-        <module>crazy-lambdas</module>
-        <module>crazy-optionals</module>
+        <!-- <module>declarative-sum-of-squares</module> -->
+        <!-- <module>crazy-lambdas</module> -->
+        <!-- <module>crazy-optionals</module> -->
     </modules>
     <packaging>pom</packaging>
 
     <properties>
-        <maven.compiler.source>11</maven.compiler.source>
-        <maven.compiler.target>11</maven.compiler.target>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
@@ -31,27 +31,27 @@
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <version>1.18.8</version>
+            <version>1.18.26</version>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-simple</artifactId>
-            <version>1.7.26</version>
+            <version>1.7.36</version>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-engine</artifactId>
-            <version>5.5.1</version>
+            <version>5.9.2</version>
         </dependency>
         <dependency>
             <groupId>com.google.code.findbugs</groupId>
             <artifactId>jsr305</artifactId>
-            <version>3.0.0</version>
+            <version>3.0.2</version>
         </dependency>
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
-            <version>3.0.0</version>
+            <version>3.12.4</version>
             <scope>test</scope>
         </dependency>
         <dependency>
