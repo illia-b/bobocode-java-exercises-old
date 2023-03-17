@@ -1,12 +1,71 @@
 package com.bobocode;
 
+import javax.annotation.Nonnull;
+import java.util.Arrays;
+import java.util.ConcurrentModificationException;
+import java.util.Iterator;
+import java.util.NoSuchElementException;
+import java.util.Spliterators;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
+
 /**
  * {@link LinkedList} is a list implementation that is based on singly linked generic nodes. A node is implemented as
  * inner static class {@link Node<T>}. In order to keep track on nodes, {@link LinkedList} keeps a reference to a head node.
  *
  * @param <T> generic type parameter
  */
-public class LinkedList<T> implements List<T> {
+public class LinkedList<T> implements List<T>, Iterable<T> {
+
+    public static final String INDEX_INCORRECT_MSG = "Index is incorrect";
+
+    static class Node<T> {
+        T value;
+        Node<T> next = null;
+
+        public Node(T value) {
+            this.value = value;
+        }
+    }
+
+
+
+    private int size;
+    private long version = Long.MIN_VALUE;
+    private final Node<T> root = new Node<>(null);
+
+    public Iterator<T> iterator() {
+        return new Iterator<>() {
+
+            private final long createdAt = version;
+            private Node<T> cursor = root;
+            @Override
+            public boolean hasNext() {
+                checkNotModified();
+                return cursor.next != null;
+            }
+
+            @Override
+            public T next() {
+                checkNotModified();
+                if (cursor.next == null) {
+                    throw new NoSuchElementException();
+                }
+                cursor = cursor.next;
+                return cursor.value;
+            }
+
+            private void checkNotModified() {
+                if (createdAt != version) {
+                    throw new ConcurrentModificationException();
+                }
+            }
+        };
+    }
+
+    public Stream<T> getStream() {
+        return StreamSupport.stream(Spliterators.spliterator(iterator(), size, 0), false);
+    }
 
     /**
      * This method creates a list of provided elements
@@ -15,8 +74,11 @@ public class LinkedList<T> implements List<T> {
      * @param <T>      generic type
      * @return a new list of elements the were passed as method parameters
      */
-    public static <T> List<T> of(T... elements) {
-        throw new UnsupportedOperationException("This method is not implemented yet"); // todo: implement this method
+    @SafeVarargs
+    public static <T> List<T> of(@Nonnull T... elements) {
+        var l = new LinkedList<T>();
+        Arrays.stream(elements).forEach(l::add);
+        return l;
     }
 
     /**
@@ -25,8 +87,8 @@ public class LinkedList<T> implements List<T> {
      * @param element element to add
      */
     @Override
-    public void add(T element) {
-        throw new UnsupportedOperationException("This method is not implemented yet"); // todo: implement this method
+    public void add(@Nonnull T element) {
+        add(size, element);
     }
 
     /**
@@ -37,8 +99,14 @@ public class LinkedList<T> implements List<T> {
      * @param element element to add
      */
     @Override
-    public void add(int index, T element) {
-        throw new UnsupportedOperationException("This method is not implemented yet"); // todo: implement this method
+    public void add(int index, @Nonnull T element) {
+        var toTheEnd = index == size;
+        if (!(hasElement(index) || toTheEnd))
+            throw new IndexOutOfBoundsException(INDEX_INCORRECT_MSG);
+
+        insertAfter(getNode(index - 1), element);
+        version++;
+        size++;
     }
 
     /**
@@ -49,8 +117,11 @@ public class LinkedList<T> implements List<T> {
      * @param element a new element value
      */
     @Override
-    public void set(int index, T element) {
-        throw new UnsupportedOperationException("This method is not implemented yet"); // todo: implement this method
+    public void set(int index, @Nonnull T element) {
+        if (!hasElement(index)) {
+            throw new IndexOutOfBoundsException(INDEX_INCORRECT_MSG);
+        }
+        getNode(index).value = element;
     }
 
     /**
@@ -62,7 +133,10 @@ public class LinkedList<T> implements List<T> {
      */
     @Override
     public T get(int index) {
-        throw new UnsupportedOperationException("This method is not implemented yet"); // todo: implement this method
+        if (!hasElement(index)) {
+            throw new IndexOutOfBoundsException(INDEX_INCORRECT_MSG);
+        }
+        return getNode(index).value;
     }
 
     /**
@@ -73,7 +147,12 @@ public class LinkedList<T> implements List<T> {
      */
     @Override
     public void remove(int index) {
-        throw new UnsupportedOperationException("This method is not implemented yet"); // todo: implement this method
+        if (!hasElement(index)) {
+            throw new IndexOutOfBoundsException(INDEX_INCORRECT_MSG);
+        }
+        removeAfter(getNode(index - 1));
+        version++;
+        size--;
     }
 
 
@@ -84,7 +163,7 @@ public class LinkedList<T> implements List<T> {
      */
     @Override
     public boolean contains(T element) {
-        throw new UnsupportedOperationException("This method is not implemented yet"); // todo: implement this method
+        return getStream().anyMatch(element::equals);
     }
 
     /**
@@ -94,7 +173,7 @@ public class LinkedList<T> implements List<T> {
      */
     @Override
     public boolean isEmpty() {
-        throw new UnsupportedOperationException("This method is not implemented yet"); // todo: implement this method
+        return size == 0;
     }
 
     /**
@@ -104,7 +183,7 @@ public class LinkedList<T> implements List<T> {
      */
     @Override
     public int size() {
-        throw new UnsupportedOperationException("This method is not implemented yet"); // todo: implement this method
+        return size;
     }
 
     /**
@@ -112,6 +191,34 @@ public class LinkedList<T> implements List<T> {
      */
     @Override
     public void clear() {
-        throw new UnsupportedOperationException("This method is not implemented yet"); // todo: implement this method
+        root.next = null;
+        size = 0;
     }
+
+    private Node<T> getNode(int index) {
+        var i = -1;
+        var node = root;
+        while (i < index) {
+            node = node.next;
+            i++;
+        }
+        return node;
+    }
+
+    private void insertAfter(Node<T> node, T value) {
+        var nextnext = node.next;
+        node.next = new Node<>(value);
+        node.next.next = nextnext;
+    }
+
+    private void removeAfter(Node<T> node) {
+        node.next = node.next.next;
+    }
+
+    private boolean hasElement(int index) {
+        boolean nonNegative = index >= 0;
+        boolean notOutOfSize = index < size;
+        return nonNegative && notOutOfSize;
+    }
+
 }
